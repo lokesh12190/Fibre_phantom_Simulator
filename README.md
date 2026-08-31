@@ -11,8 +11,8 @@ its true structure is known exactly. That makes it possible to put a number on
 how good a reconstruction is — which a real scan can never do, because no
 ground truth exists for it.
 
-If you are here to reconstruct and score, read
-**[docs/RECONSTRUCTION_GUIDE.md](docs/RECONSTRUCTION_GUIDE.md)**.
+If you are here to reconstruct and score, go straight to
+**[How to use this](#how-to-use-this)**.
 
 ---
 
@@ -60,9 +60,20 @@ run_parameters.json           every parameter, plus the true phase fractions
 
 ---
 
-## Quick start
+## How to use this
 
-Scoring and reconstruction need no GPU unless you use ASTRA yourself:
+Three steps: **reconstruct → score → read the numbers.**
+
+| I want to... | Run |
+|---|---|
+| Reconstruct with the built-in ASTRA baseline | `analysis/reconstruct_from_projections.py` |
+| Score any reconstruction against the truth | `analysis/score_reconstruction.py` |
+| Characterise artefacts (cupping, noise, drift) | `analysis/measure_artefacts.py` |
+| Build a new dataset | `generate_for_reconstruction.py` |
+
+---
+
+### Step 0 — Install
 
 ```bash
 conda create -n fiber_phantom python=3.10
@@ -70,29 +81,191 @@ conda activate fiber_phantom
 pip install -r requirements.txt
 ```
 
-Reconstruct from the exported projections and geometry:
+ASTRA is only needed if you reconstruct with the built-in script. Scoring
+needs no GPU and no ASTRA.
+
+```bash
+conda install -c astra-toolbox astra-toolbox   # only for reconstruction
+```
+
+---
+
+### Step 1 — Know which file is which
+
+Inside `data/full_realistic_820/`:
+
+| File | Role |
+|---|---|
+| `projections_noisy.npy` | **INPUT.** The X-ray images you reconstruct from. Realistic case. |
+| `projections_clean.npy` | **INPUT.** Same scan without noise. Use first, as a sanity check. |
+| `projections_*_tiff/` | The same images as one 32-bit TIFF per angle, if your software cannot read `.npy` |
+| `angles.npy` | **INPUT.** Rotation angle of each projection, in radians |
+| `geometry.json` | **INPUT.** Source/detector distances, detector size, pixel pitch |
+| `ground_truth.nii` | **ANSWER KEY.** Do not use while reconstructing — only for scoring |
+| `reconstruction_reference_noisy.nii` | **BASELINE.** Plain FDK on the same noisy input; the result to beat |
+| `reconstruction_reference_clean.nii` | Plain FDK on the clean input |
+| `run_parameters.json` | Every setting used, plus the true phase fractions |
+
+---
+
+### Step 2 — Reconstruct
+
+**Option A — the built-in baseline** (needs ASTRA + GPU):
 
 ```bash
 python analysis/reconstruct_from_projections.py \
     --dataset data/full_realistic_820 --which noisy
 ```
 
-Score any reconstruction against the truth:
+It also accepts `--algorithm SIRT3D_CUDA` and `--iterations N` if you just want
+a different ASTRA algorithm.
+
+**Option B — your own algorithm.** See
+[Using a different reconstruction algorithm](#using-a-different-reconstruction-algorithm)
+below.
+
+---
+
+### Step 3 — Score it
 
 ```bash
 python analysis/score_reconstruction.py \
     --truth data/full_realistic_820/ground_truth.nii \
-    --recon your_reconstruction.nii \
+    --recon my_reconstruction.nii \
     --pipe-radius 290 --axial-margin 40
 ```
 
-`--axial-margin` excludes the unusable slices at each end of the rotation axis.
-Use 40 for the realistic geometry and 60 for the generic one. Leaving it out
-makes any reconstruction look considerably worse than it is.
+Two flags that matter:
 
-Your reconstruction may be on any intensity scale — the scorer fits it onto
-the ground-truth scale by least squares first, so it measures structure rather
-than penalising a brightness offset.
+- `--pipe-radius 290` — the specimen radius. Same for all shipped datasets.
+- `--axial-margin 40` — excludes the unusable slices at each end of the
+  rotation axis. **Use 40 for `full_realistic_820`, 60 for
+  `full_generic_820`.** Those slices are not seen from every angle and
+  reconstruct badly no matter what algorithm you use; including them makes any
+  result look considerably worse than it is.
+
+Your reconstruction can be on **any intensity scale** — the scorer fits it onto
+the ground-truth scale by least squares first, so it measures structure, not
+brightness.
+
+---
+
+### Step 4 — Read the output
+
+```
+--- Intensity fidelity ---
+  RMSE   : 3.2211
+  PSNR   : 32.12 dB
+  SSIM   : 0.9398          how close to the truth (1.0 = perfect)
+
+--- Fibre volume fraction ---
+  true            : 15.945 %      what is actually there
+  Otsu threshold  : 15.823 %  (error -0.122 pp)    what you would measure
+  linear unmixing : 17.383 %  (error +1.438 pp)
+
+--- Phase separability ---
+  matrix vs fibre d' = 7.04  (cleanly separable)
+```
+
+- **SSIM / PSNR** — overall fidelity. Higher is better.
+- **Fibre fraction error** — the practical one. On a real scan you could never
+  know this number.
+- **d′** — whether fibres are resolvable at all. Above 3 a threshold can
+  separate matrix from fibre; below 2 no method can, and any fibre fraction you
+  compute is an artefact rather than a property of the material.
+
+---
+
+## Using a different reconstruction algorithm
+
+This is the main use of the dataset. You need three inputs — the projections,
+the angles, and the geometry — and you must return a volume on the same voxel
+grid.
+
+```python
+import json
+import numpy as np
+import nibabel as nib
+
+DATASET = "data/full_realistic_820"
+
+geom   = json.load(open(f"{DATASET}/geometry.json"))
+proj   = np.load(f"{DATASET}/projections_noisy.npy")   # (det_row, angle, det_col)
+angles = np.load(f"{DATASET}/angles.npy")              # radians
+
+# ---------------------------------------------------------------
+# Your reconstruction goes here. It must return an array of shape
+# geom["volume_dimensions"] == (820, 600, 600).
+# The intensity scale does not matter.
+volume = my_reconstruction(proj, angles, geom)
+# ---------------------------------------------------------------
+
+nib.save(nib.Nifti1Image(volume.astype(np.float32), np.eye(4)),
+         "my_reconstruction.nii")
+```
+
+Then score `my_reconstruction.nii` with Step 3.
+
+### What the projection values are
+
+The projections are **line integrals of attenuation, not raw photon counts.**
+They are already log-corrected — **do not take a log of them again.** Feed them
+straight into your reconstructor.
+
+The noisy set was made by drawing Poisson photon counts and converting back:
+
+```
+counts  = Poisson( i0 * exp(-f * p) )
+p_noisy = -log(counts / i0) / f
+```
+
+with `i0` and the absorption factor `f` both recorded in `geometry.json`. If
+you would rather start from raw counts and apply your own correction, invert
+that relation — or ask, and the counts can be exported directly.
+
+### What `geometry.json` gives you
+
+| Field | Meaning |
+|---|---|
+| `geometry_type` | `"cone"` for all shipped datasets |
+| `volume_dimensions` | `[820, 600, 600]` — the grid your output must match |
+| `source_origin`, `origin_det` | Source-to-object and object-to-detector distances |
+| `det_width_u`, `det_width_v` | Detector pixel pitch |
+| `det_count_x`, `det_count_y` | Detector rows and columns |
+| `projection_axis_order` | `"(detector_row, angle, detector_column)"` |
+| `magnification`, `voxel_size_at_isocenter` | Derived, for convenience |
+| `astra_vol_geom_call` | The exact ASTRA call that matches this volume |
+
+The distances are in a consistent arbitrary unit, not millimetres. Only their
+ratios matter, and they are scaled so one detector pixel equals one voxel at
+the isocentre.
+
+### Three things that will bite you
+
+**1. The angle axis is in the middle.** `projections_*.npy` has shape
+`(detector_row, angle, detector_column)` — ASTRA's convention, and not what
+most people assume. Transpose if your code expects angle-first.
+
+**2. `nibabel` and `SimpleITK` disagree about axis order.** `ground_truth.nii`
+loads as `(820, 600, 600)` with the fibre axis first under nibabel, but
+`(600, 600, 820)` under SimpleITK. Mixing them without transposing does not
+error — it silently misaligns your volumes and every metric comes out wrong.
+Pick one loader and stay with it.
+
+**3. The volume geometry argument order is not a simple swap.**
+`astra.create_vol_geom(Y, X, Z)` expects its data shaped `(Z, Y, X)`. Getting
+this wrong produces a reconstruction that looks almost right but is subtly
+rotated. `geometry.json` records the exact call as `astra_vol_geom_call`.
+
+### Suggested order
+
+1. Reconstruct `projections_clean.npy` and score it. This is your ceiling. If
+   it does not score well, the problem is geometry handling, not your
+   algorithm.
+2. Reconstruct `projections_noisy.npy` and score it. The gap between the two is
+   your method's noise robustness.
+3. Compare against `reconstruction_reference_noisy.nii` — plain FDK on the same
+   input — to see whether you beat the baseline.
 
 ---
 
@@ -132,15 +305,14 @@ fiber_phantom/
   defects.py                macro defects (holes, notches)
   config.py                 config -> generator objects
   scan_export.py            scan simulation, projection + geometry export
-generate_for_reconstruction.py   CLI: config in, dataset out
+generate_for_reconstruction.py   CLI: config in, fibre dataset out
+make_reference_phantom.py        CLI: config in, fibre-free phantom out
 configs/                    specimen and scan parameter sets
-make_reference_phantom.py        CLI: fibre-free calibration phantoms
 analysis/
   reconstruct_from_projections.py  reconstruct from geometry.json alone
   score_reconstruction.py          score a reconstruction against truth
   measure_artefacts.py             cupping, noise, rings, axial drift
 data/                       datasets (git-ignored)
-docs/RECONSTRUCTION_GUIDE.md     how to reconstruct and score
 ```
 
 `data/` is excluded from git — one projection stack alone is 6 GB. Transfer it
