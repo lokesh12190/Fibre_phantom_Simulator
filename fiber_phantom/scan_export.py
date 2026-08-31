@@ -87,6 +87,81 @@ def build_geometries(params):
     return vol_geom, proj_geom, angles
 
 
+def validate_geometry(params, strict=True):
+    """Check the detector is big enough for the specimen, before generating.
+
+    The forward projection already detects truncation, but only after the
+    phantom has been built and projected, which at full scale is several
+    minutes of wasted work. This reproduces the same conclusion analytically
+    in a fraction of a second.
+
+    The subtlety worth stating: in a cone beam the magnification is not
+    uniform. It is (source_origin + origin_det) / source_origin only at the
+    isocentre; the part of the specimen nearest the source magnifies more,
+    by (source_origin + origin_det) / (source_origin - pipe_radius). Sizing a
+    detector from the isocentre figure looks correct and still truncates.
+    """
+    if params["geometry_type"] != "cone":
+        return {}
+
+    sod, odd = params["source_origin"], params["origin_det"]
+    pipe_radius = params["pipe_radius"]
+    half_height = params["volume_dimensions"][0] / 2
+
+    if sod <= pipe_radius:
+        raise ValueError(
+            f"source_origin ({sod}) is inside the specimen radius "
+            f"({pipe_radius}); the source cannot sit within the object."
+        )
+
+    worst_magnification = (sod + odd) / (sod - pipe_radius)
+    projected_half_height = half_height * worst_magnification
+    projected_half_width = pipe_radius * worst_magnification
+
+    # det_count_x is the row count (vertical), det_count_y the column count.
+    detector_half_height = params["det_count_x"] * params["det_width_v"] / 2
+    detector_half_width = params["det_count_y"] * params["det_width_u"] / 2
+
+    cone_half_angle = np.degrees(np.arctan(half_height / sod))
+    print(f"Geometry check: isocentre magnification "
+          f"{(sod + odd) / sod:.3f}, worst-case {worst_magnification:.3f}, "
+          f"cone half-angle {cone_half_angle:.1f} deg")
+
+    problems = []
+    for axis, projected, available in (
+            ("height", projected_half_height, detector_half_height),
+            ("width", projected_half_width, detector_half_width)):
+        if available <= projected:
+            problems.append(
+                f"detector half-{axis} {available:.0f} < projected "
+                f"{projected:.0f} (need at least "
+                f"{int(np.ceil(2 * projected / (params['det_width_v'] if axis == 'height' else params['det_width_u'])))} "
+                f"{'rows (det_count_x)' if axis == 'height' else 'columns (det_count_y)'})"
+            )
+        else:
+            print(f"  {axis:6}: projected {projected:7.1f} vs detector "
+                  f"{available:7.1f}  (x{available / projected:.2f} margin)")
+
+    if problems:
+        message = ("The specimen will be truncated on the detector:\n  "
+                   + "\n  ".join(problems))
+        if strict:
+            raise ValueError(
+                message + "\n\nTruncated projections cannot be reconstructed "
+                "correctly by any algorithm.\nEnlarge the detector, move the "
+                "source further away, or shrink the specimen."
+            )
+        print(f"  WARNING: {message}")
+
+    if cone_half_angle > 15:
+        print(f"  NOTE: a {cone_half_angle:.0f} deg cone half-angle is wide; "
+              f"expect noticeable Feldkamp\n  artefacts away from the central "
+              f"plane even with a correct reconstruction.")
+
+    return {"worst_case_magnification": float(worst_magnification),
+            "cone_half_angle_degrees": float(cone_half_angle)}
+
+
 def check_truncation(projections, tolerance=1e-6):
     """Warn if the specimen runs off the edge of the detector.
 
@@ -177,12 +252,20 @@ def simulate_and_export(volume, params, outdir, save_reference_reconstruction=Tr
     projections_noisy = add_photon_noise(projections, i0, absorption_factor)
 
     noise_std = float(np.std(projections_noisy - projections))
+    # Measured against the mean signal where the beam actually passes through
+    # the specimen. An earlier version compared against the projections'
+    # standard deviation, which is dominated by the contrast between specimen
+    # and the empty air around it, and so reported "negligible noise" for
+    # scans whose reconstructions were in fact visibly degraded.
+    signal = float(projections[projections > 0].mean())
+    snr = signal / noise_std if noise_std > 0 else float("inf")
     print(f"  absorption_factor {absorption_factor:.6g}, i0 {i0:.4g}")
-    print(f"  added noise: std {noise_std:.6g} in line-integral units")
-    if noise_std < 0.01 * float(projections.std()):
-        print("  NOTE: noise is under 1% of the signal spread. At this photon "
-              "count the\n  'noisy' set is nearly identical to the clean one - "
-              "lower i0 for a real noise study.")
+    print(f"  added noise: std {noise_std:.6g} in line-integral units "
+          f"(projection SNR {snr:.0f})")
+    if snr > 500:
+        print(f"  NOTE: SNR {snr:.0f} is very high, so the 'noisy' set will "
+              f"reconstruct almost\n  identically to the clean one. Lower i0 "
+              f"for a meaningful noise study.")
 
     np.save(os.path.join(outdir, "projections_clean.npy"),
             projections.astype(np.float32))

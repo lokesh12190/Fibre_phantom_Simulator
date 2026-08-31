@@ -1,0 +1,83 @@
+{
+    "_comment": "FULL SCALE - generic phantom, deliberately NOT matched to any real scanner. Round-number cone-beam geometry (magnification exactly 2, one detector pixel = one voxel at isocentre) on the same 820x600x600 specimen as full_realistic_820.json, with the same seed and fibre count - so the ground truth is identical and the pair isolates the effect of scan geometry alone. Fibres are radius 3 and cleanly resolved; ~15.5 vol% to match PA6GF30. Expect ~19 GB with TIFF stacks.",
+    "random_seed": 45,
+    "num_volumes": 1,
+    "volume_dimensions": [
+        820,
+        600,
+        600
+    ],
+    "pipe_radius": 290,
+    "num_filaments": 38400,
+    "min_length": 10,
+    "max_length": 20,
+    "radius_range": [
+        3,
+        3
+    ],
+    "generator_mode": "straight",
+    "preferred_direction": [
+        1,
+        0,
+        0
+    ],
+    "bias": 1.0,
+    "orientation_jitter_deg": 25,
+    "kink_bend_center": 400,
+    "kink_transition_range": 64,
+    "kink_return_center": 480,
+    "kink_return_transition_range": 64,
+    "defect_type": "none",
+    "hole_params": [
+        {
+            "hole_center": [
+                640,
+                300,
+                300
+            ],
+            "hole_radius": 50
+        }
+    ],
+    "square_notch_params": [
+        {
+            "square_notch_center": [
+                128,
+                0
+            ],
+            "square_notch_wh": 30
+        }
+    ],
+    "v_notch_params": [
+        {
+            "v_notch_center": [
+                128,
+                0
+            ],
+            "v_notch_height": 30,
+            "v_notch_width": 60
+        }
+    ],
+    "reduced_params": [
+        {
+            "reduced_center": [
+                300,
+                300
+            ],
+            "reduced_radius": 200,
+            "reduced_slice_thickness": 25
+        }
+    ],
+    "ASTRA_reconstruction": true,
+    "num_angles": 832,
+    "angular_range_degrees": 360,
+    "geometry_type": "cone",
+    "source_origin": 3200.0,
+    "origin_det": 3200.0,
+    "det_width_u": 2.0,
+    "det_width_v": 2.0,
+    "det_count_x": 1200,
+    "det_count_y": 1024,
+    "i0": 100000.0,
+    "algorithm": "FDK_CUDA",
+    "show_plots": false
+}

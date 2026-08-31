@@ -28,6 +28,7 @@ Usage:
 import argparse
 import json
 import os
+import random
 import time
 
 import numpy as np
@@ -59,7 +60,19 @@ def main():
     os.makedirs(args.out, exist_ok=True)
     start = time.time()
 
+    # Fail before building the phantom rather than after projecting it: a
+    # detector too small for the specimen wastes the whole run.
+    from fiber_phantom.scan_export import validate_geometry
+    validate_geometry(params)
+
     random_seed = params["random_seed"] + args.index
+    # Both generators must be seeded. Fibre starting positions come from the
+    # standard library's `random` (next_point_generator.initialize_starting_point),
+    # while orientation jitter and the photon noise come from numpy. Seeding
+    # only numpy - as the pipeline previously did - left fibre placement
+    # unseeded, so two runs of the same config produced different phantoms and
+    # a dataset could not be regenerated from its recorded random_seed.
+    random.seed(random_seed)
     np.random.seed(random_seed)
 
     print(f"Building phantom: {params['volume_dimensions']}, "
