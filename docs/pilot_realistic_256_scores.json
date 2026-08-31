@@ -1,0 +1,38 @@
+{
+  "truth": "data/pilot_realistic_256/ground_truth.nii",
+  "recon": "data/pilot_realistic_256/reconstruction_reference.nii",
+  "mask_radius": 100,
+  "intensity": {
+    "intensity_scale_a": 0.8224786516278897,
+    "intensity_offset_b": 18.83588767071024,
+    "rmse": 5.112596420719374,
+    "psnr_db": 28.106036813245915,
+    "ssim": 0.9076629672009427
+  },
+  "fibre_fraction": {
+    "true_fibre_fraction": 0.11087858981602317,
+    "otsu_fibre_fraction": 0.1098401392956043,
+    "otsu_threshold": 111.88444519042969,
+    "unmixing_fibre_fraction": 0.13477912143503984,
+    "unmixing_absolute_error": 0.023900531619016674,
+    "otsu_absolute_error": -0.001038450520418871
+  },
+  "phase_separability": {
+    "void": {
+      "mean": 59.60452375945551,
+      "std": 10.383979175898373,
+      "voxels": 291
+    },
+    "matrix": {
+      "mean": 100.9694715671576,
+      "std": 4.3224286240009295,
+      "voxels": 7150692
+    },
+    "fibre": {
+      "mean": 122.20679627132546,
+      "std": 4.057402966114547,
+      "voxels": 891769
+    },
+    "matrix_fibre_dprime": 5.066142726326437
+  }
+}

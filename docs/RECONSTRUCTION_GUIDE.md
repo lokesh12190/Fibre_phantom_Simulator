@@ -129,6 +129,25 @@ deliberately built with radius-3 fibres to sit in the comfortable range.
 
 ---
 
+## The datasets come in matched pairs
+
+Within each size, the `realistic` and `generic` datasets share a **bit-identical
+ground truth** — the same specimen, scanned two ways:
+
+| | geometry | cone half-angle |
+|---|---|---|
+| `full_realistic_820` | real scanner distances, magnification 11.92 | 4.5° |
+| `full_generic_820` | round numbers, magnification 2 | 7.3° |
+
+So comparing your results across a pair isolates the effect of scan geometry
+alone, with everything else held fixed. For reference, plain FDK scores
+*d′* 3.78 on the realistic geometry and 3.04 on the generic one — the wider
+cone is the harder problem.
+
+The 256³ pilots are the same idea at 1/30th the size, for quick iteration.
+
+---
+
 ## Suggested order
 
 1. Reconstruct `projections_clean.npy`. Score it. This is your ceiling — if

@@ -18,20 +18,27 @@ If you are here to reconstruct and score, read
 
 ## The datasets
 
-| Dataset | Volume | Angles | Detector | Fibre | Size |
-|---|---|---|---|---|---|
-| `data/full_realistic_820` | 820×600×600 | 832 over 360° | 1720×1070 | 15.46 vol% | 26 GB |
-| `data/pilot_generic_256` | 256³ | 180 over 360° | 512×512 | 10.8 vol% | 850 MB |
-| `data/pilot_realistic_256` | 256³ | 180 over 360° | 512×512 | 10.8 vol% | 489 MB |
+| Dataset | Volume | Angles | Detector | Geometry | Fibre | Size |
+|---|---|---|---|---|---|---|
+| `data/full_realistic_820` | 820×600×600 | 832 over 360° | 1720×1070 | real scanner, mag 11.92 | 15.44 vol% | 26 GB |
+| `data/full_generic_820` | 820×600×600 | 832 over 360° | 1200×1024 | round-number, mag 2 | 15.44 vol% | 18 GB |
+| `data/pilot_realistic_256` | 256³ | 180 over 360° | 512×512 | real scanner, mag 11.92 | 10.82 vol% | 850 MB |
+| `data/pilot_generic_256` | 256³ | 180 over 360° | 512×512 | round-number, mag 2 | 10.82 vol% | 850 MB |
 
-**`full_realistic_820`** is the main deliverable. It uses the real PA6GF30
-scanner geometry (magnification 11.92, so one detector pixel is one voxel at
-isocentre) at the real specimen size, with fibre content matched to the
-PA6GF30 datasheet.
+**`full_realistic_820`** is the main deliverable: the real PA6GF30 scanner
+geometry at the real specimen size, with fibre content matched to the PA6GF30
+datasheet.
 
-The two pilots are small and fast to work with. `pilot_generic` uses
-round-number geometry (magnification exactly 2) with no relation to any real
-scanner; `pilot_realistic` uses the real scanner distances at reduced size.
+**The datasets come in matched pairs.** Within each size, the realistic and
+generic datasets share a *bit-identical* ground truth — same seed, same
+specimen, scanned two ways. The only difference is the scan geometry, so
+comparing results across a pair isolates the effect of geometry alone. The
+`realistic` variants use the real scanner's source and detector distances; the
+`generic` variants use round numbers (magnification exactly 2) with no
+relation to any real machine.
+
+The 256³ pilots are small and quick to iterate on; the 820 datasets are the
+real thing.
 
 Every dataset contains:
 
@@ -53,19 +60,62 @@ run_parameters.json           every parameter, plus the true phase fractions
 
 Measured, not estimated — reproduce with the commands below.
 
-| | full_realistic_820 | pilot_realistic_256 | pilot_generic_256 |
-|---|---|---|---|
-| Reconstructed from `geometry.json` alone | **exact, diff = 0** | **exact, diff = 0** | **exact, diff = 0** |
-| Specimen truncated on detector | no | no | no |
-| True fibre fraction | 15.46 vol% | 10.80 vol% | 10.81 vol% |
-| Fibre fraction measured by Otsu | 15.12 % (**−0.49 pp**) | 11.13 % (−0.11 pp) | 10.93 % (−0.38 pp) |
-| matrix/fibre *d′* | **3.78** cleanly separable | **5.05** cleanly separable | **3.17** cleanly separable |
-| SSIM / PSNR (FDK vs truth) | 0.916 / 25.8 dB | 0.909 / 28.1 dB | 0.896 / 25.2 dB |
+All figures below are for the shipped FDK reference reconstruction, scored
+inside the specimen mask eroded 20 voxels inward from the pipe wall.
 
-The *d′* row is the one that matters: it says the fibres are genuinely
-resolved, so a measured fibre fraction reflects the material rather than the
-reconstruction. The earlier 1-voxel-fibre dataset scored *d′* = 2.27 with a
-+3.83 pp Otsu error, which is what motivated the radius-3 fibres here.
+| | full_realistic_820 | full_generic_820 | pilot_realistic_256 | pilot_generic_256 |
+|---|---|---|---|---|
+| Reconstructed from `geometry.json` alone | **exact, diff = 0** | **exact, diff = 0** | **exact, diff = 0** | **exact, diff = 0** |
+| Specimen truncated on detector | no | no | no | no |
+| Regenerates identically from its seed | yes | yes | yes | yes |
+| True fibre fraction (eroded mask) | 15.62 % | 15.62 % | 11.09 % | 11.09 % |
+| Otsu error, clean | **−0.49 pp** | −0.95 pp | **−0.10 pp** | −0.45 pp |
+| Otsu error, noisy | +0.85 pp | +0.91 pp | +0.80 pp | +0.53 pp |
+| matrix/fibre *d′*, clean | **3.78** | 3.04 | **5.07** | 3.09 |
+| matrix/fibre *d′*, noisy | 3.00 | 2.59 | 3.78 | 2.80 |
+| SSIM, clean → noisy | 0.916 → 0.782 | 0.897 → 0.783 | 0.908 → 0.819 | 0.896 → 0.848 |
+| PSNR, clean | 25.8 dB | 24.7 dB | 28.1 dB | 25.2 dB |
+
+Three things this table is saying:
+
+- ***d′* is the row that matters.** It says the fibres are genuinely resolved,
+  so a measured fibre fraction reflects the material rather than the
+  reconstruction. Every clean reconstruction clears 3.0. An earlier
+  1-voxel-fibre dataset scored 2.27 with a +3.83 pp Otsu error, which is what
+  motivated the radius-3 fibres used here.
+- **The noise is real.** SSIM drops by 0.05–0.13 and *d′* falls below 3 on the
+  generic geometry, so the noisy sets are a genuine test rather than a copy of
+  the clean ones.
+- **The realistic geometry reconstructs better than the generic one** at the
+  same specimen and photon count (*d′* 3.78 vs 3.04). Its far larger
+  source-to-object distance gives a 4.5° cone half-angle against 7.3°, and
+  less cone-beam distortion away from the central plane.
+
+### Fibre content is not radially uniform
+
+The true fibre fraction reads 15.62 % in the table above but 15.44 % in the
+dataset table. Both are correct — they use different masks, and the fraction
+genuinely varies with radius. Measured on `full_realistic_820`:
+
+| radius (vox) | 0–100 | 100–200 | 200–250 | 250–270 | 270–280 | 280–290 |
+|---|---|---|---|---|---|---|
+| fibre | 14.16 % | 15.37 % | 16.27 % | 16.32 % | 16.12 % | 12.63 % |
+
+Two separate effects, both consequences of how the phantom is built:
+
+- **The outermost band is sparse** (12.63 %). A fibre is only placed if its
+  full radius fits inside the pipe, so the last few voxels before the wall
+  cannot be filled. Eroding the mask removes this band, which is why the
+  eroded figure is the higher of the two.
+- **The core is sparse too** (14.16 %). `orientation_jitter_deg` tilts fibres
+  near the axis by up to 25° while leaving fibres near the wall aligned. Tilted
+  fibres sweep a longer path and are rejected by the collision check more
+  often, so fewer of them land.
+
+This matters if you measure fibre fraction in a sub-volume rather than the
+whole specimen: expect roughly 14 % near the axis and 16 % at mid-radius even
+with a perfect reconstruction. `run_parameters.json` records the whole-pipe
+value. Setting `orientation_jitter_deg` to 0 removes the core gradient.
 
 ---
 

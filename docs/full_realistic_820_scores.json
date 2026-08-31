@@ -3,36 +3,36 @@
   "recon": "data/full_realistic_820/reconstruction_reference.nii",
   "mask_radius": 270,
   "intensity": {
-    "intensity_scale_a": 0.7279207308752821,
-    "intensity_offset_b": 29.627620972549888,
-    "rmse": 6.6665352509301234,
-    "psnr_db": 25.8008634483256,
-    "ssim": 0.9158807469473386
+    "intensity_scale_a": 0.7278330590397647,
+    "intensity_offset_b": 29.63719128696867,
+    "rmse": 6.667196165182097,
+    "psnr_db": 25.800002379795206,
+    "ssim": 0.9162044305135612
   },
   "fibre_fraction": {
-    "true_fibre_fraction": 0.1560931937247505,
-    "otsu_fibre_fraction": 0.15117075343705305,
-    "otsu_threshold": 111.87379455566406,
-    "unmixing_fibre_fraction": 0.18477076331400083,
-    "unmixing_absolute_error": 0.02867756958925033,
-    "otsu_absolute_error": -0.004922440287697449
+    "true_fibre_fraction": 0.15614896671377262,
+    "otsu_fibre_fraction": 0.1512117949432987,
+    "otsu_threshold": 111.87846374511719,
+    "unmixing_fibre_fraction": 0.184848980583899,
+    "unmixing_absolute_error": 0.028700013870126384,
+    "otsu_absolute_error": -0.004937171770473925
   },
   "phase_separability": {
     "void": {
-      "mean": 65.98717697444091,
-      "std": 9.595261009647453,
-      "voxels": 310
+      "mean": 66.04011773836602,
+      "std": 9.96029994221158,
+      "voxels": 287
     },
     "matrix": {
-      "mean": 101.75487845040763,
-      "std": 5.404092107907555,
-      "voxels": 158452594
+      "mean": 101.75538338012751,
+      "std": 5.407396127818707,
+      "voxels": 158442145
     },
     "fibre": {
-      "mean": 120.5116944381573,
-      "std": 4.483770516807028,
-      "voxels": 29308236
+      "mean": 120.51303142149592,
+      "std": 4.467538602640329,
+      "voxels": 29318708
     },
-    "matrix_fibre_dprime": 3.7775795471833553
+    "matrix_fibre_dprime": 3.7819516751133935
   }
 }
