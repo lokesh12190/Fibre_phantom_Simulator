@@ -15,12 +15,11 @@ setup(
         "numpy==1.24.2",
         "scipy==1.13.1",
         "nibabel==5.2.1",
-        "matplotlib==3.7.1",
         "tifffile==2025.5.10",
     ],
     extras_require={
-        # Needed only by the scripts in analysis/
-        "analysis": ["SimpleITK==2.3.1", "scikit-image==0.22.0"],
+        # Needed only by analysis/score_reconstruction.py
+        "analysis": ["scikit-image==0.22.0"],
     },
     # NOTE: astra-toolbox is deliberately absent - it is conda-only and needs
     # a CUDA GPU. See requirements.txt.

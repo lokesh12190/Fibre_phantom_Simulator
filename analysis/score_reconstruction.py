@@ -41,7 +41,7 @@ ATTENUATION_AIR = 0.0
 ATTENUATION_RESIN = 100.0
 ATTENUATION_FIBER = 130.0
 
-# Label convention produced by analysis/segment_volume.py.
+# Label convention expected from a segmentation supplied via --labels.
 LABEL_VOID, LABEL_MATRIX, LABEL_FIBRE, LABEL_OUTSIDE = 0, 1, 2, 255
 LABEL_NAMES = {LABEL_VOID: "void", LABEL_MATRIX: "matrix", LABEL_FIBRE: "fibre"}
 
@@ -163,8 +163,8 @@ def fibre_fraction_metrics(truth, recon, mask):
     Otsu is run only after excluding voids. Voids are by far the strongest
     mode in the histogram, and with them included Otsu splits void-vs-material
     instead of matrix-vs-fibre, which reports nearly the whole specimen as
-    fibre. Excluding them first reproduces the segmentation pipeline in
-    analysis/segment_volume.py, so the numbers are comparable.
+    fibre. Excluding them first is what a sane segmentation pipeline does,
+    so the numbers stay comparable with one.
     """
     truth_in = truth[mask]
     true_fraction = float((truth_in >= ATTENUATION_FIBER).mean())
@@ -243,7 +243,7 @@ def phase_separability(truth, recon, mask):
 def segmentation_metrics(truth, labels, mask):
     """Per-class Dice and IoU of a label volume against ground-truth phases."""
     if labels.shape != truth.shape:
-        # segment_volume.py writes labels in SimpleITK's reversed axis order.
+        # SimpleITK-based segmentation writes labels in reversed axis order.
         if labels.T.shape == truth.shape:
             labels = labels.T
         else:

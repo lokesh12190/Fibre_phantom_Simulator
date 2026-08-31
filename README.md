@@ -139,9 +139,6 @@ analysis/
   reconstruct_from_projections.py  reconstruct from geometry.json alone
   score_reconstruction.py          score a reconstruction against truth
   measure_artefacts.py             cupping, noise, rings, axial drift
-  measure_resolution.py            what feature size is resolvable
-  diagnose_volume.py               intensity statistics and histogram
-  segment_volume.py                void/matrix/fibre segmentation
 data/                       datasets (git-ignored)
 docs/RECONSTRUCTION_GUIDE.md     how to reconstruct and score
 ```
@@ -188,10 +185,9 @@ Forked from [marychrisgo/Fiber-Phantoms](https://github.com/marychrisgo/Fiber-Ph
 - **Replaced hardcoded paths with CLI arguments** throughout.
 - **Added `score_reconstruction.py` and `reconstruct_from_projections.py`**,
   neither of which existed upstream.
-- **Added fibre-free reference phantoms** (`make_reference_phantom.py`) with
-  `measure_artefacts.py` and `measure_resolution.py`. These are what revealed
-  that cone-beam end slices reconstruct roughly 50 % low, which had been
-  silently dominating every score.
+- **Added fibre-free reference phantoms** (`make_reference_phantom.py`) and
+  `measure_artefacts.py`. These are what revealed that cone-beam end slices
+  reconstruct roughly 50 % low, which had been silently dominating every score.
 
 ## License
 

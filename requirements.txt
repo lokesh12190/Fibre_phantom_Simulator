@@ -2,15 +2,15 @@
 numpy==1.24.2
 scipy==1.13.1
 nibabel==5.2.1
-matplotlib==3.7.1
 tifffile==2025.5.10
 
-# Analysis / segmentation scripts (analysis/)
-SimpleITK==2.3.1
+# analysis/score_reconstruction.py (SSIM and Otsu)
 scikit-image==0.22.0
 
 # ASTRA Toolbox is NOT pip-installable and is NOT listed here.
 # It needs a CUDA GPU and must be installed via conda:
 #     conda install -c astra-toolbox astra-toolbox
-# Only generation (main.py) needs it. The analysis scripts run on the
-# shipped reference data with no GPU and no ASTRA.
+# Only generation (generate_for_reconstruction.py, make_reference_phantom.py)
+# and analysis/reconstruct_from_projections.py need it.
+# analysis/score_reconstruction.py and measure_artefacts.py run on the shipped
+# data with no GPU and no ASTRA.
