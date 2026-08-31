@@ -11,7 +11,8 @@ its true structure is known exactly. That makes it possible to put a number on
 how good a reconstruction is — which a real scan can never do, because no
 ground truth exists for it.
 
-If you are here to reconstruct and score, read **[docs/FOR_FRANK.md](docs/FOR_FRANK.md)**.
+If you are here to reconstruct and score, read
+**[docs/RECONSTRUCTION_GUIDE.md](docs/RECONSTRUCTION_GUIDE.md)**.
 
 ---
 
@@ -160,7 +161,7 @@ analysis/
   diagnose_volume.py               intensity statistics and histogram
   segment_volume.py                void/matrix/fibre segmentation
 data/                       datasets (git-ignored)
-docs/FOR_FRANK.md           how to reconstruct and score
+docs/RECONSTRUCTION_GUIDE.md     how to reconstruct and score
 ```
 
 `data/` is excluded from git — one projection stack alone is 6 GB. Transfer it
@@ -208,4 +209,4 @@ Forked from [marychrisgo/Fiber-Phantoms](https://github.com/marychrisgo/Fiber-Ph
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Upstream: MC, Daan, Joost (Leiden University).
+MIT — see [LICENSE](LICENSE), which carries the upstream copyright notice.

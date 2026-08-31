@@ -7,7 +7,8 @@ setup(
         "Synthetic fibre-composite phantoms with simulated CT scanning, "
         "for validating reconstruction and segmentation against known ground truth"
     ),
-    author="MC, Daan, Joost; extended by Lokesh",
+    # Upstream copyright and authorship are recorded in LICENSE.
+    author="Fiber-Phantoms contributors",
     packages=find_packages(include=["fiber_phantom", "fiber_phantom.*"]),
     python_requires=">=3.10",
     install_requires=[
