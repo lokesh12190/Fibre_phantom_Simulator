@@ -13,9 +13,9 @@ setup(
     install_requires=[
         "numpy==1.24.2",
         "scipy==1.13.1",
-        "h5py==3.8.0",
         "nibabel==5.2.1",
         "matplotlib==3.7.1",
+        "tifffile==2025.5.10",
     ],
     extras_require={
         # Needed only by the scripts in analysis/
