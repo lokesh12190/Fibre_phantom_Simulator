@@ -1,0 +1,82 @@
+{
+    "random_seed": 45,
+    "num_volumes": 1,
+    "volume_dimensions": [
+        820,
+        600,
+        600
+    ],
+    "pipe_radius": 290,
+    "num_filaments": 206000,
+    "min_length": 19,
+    "max_length": 38,
+    "radius_range": [
+        1,
+        1
+    ],
+    "generator_mode": "straight",
+    "kink_bend_center": 400,
+    "kink_transition_range": 64,
+    "kink_return_center": 480,
+    "kink_return_transition_range": 64,
+    "preferred_direction": [
+        1,
+        0,
+        0
+    ],
+    "bias": 1.0,
+    "defect_type": "none",
+    "hole_params": [
+        {
+            "hole_center": [
+                640,
+                300,
+                300
+            ],
+            "hole_radius": 50
+        }
+    ],
+    "square_notch_params": [
+        {
+            "square_notch_center": [
+                125,
+                0
+            ],
+            "square_notch_wh": 50
+        }
+    ],
+    "v_notch_params": [
+        {
+            "v_notch_center": [
+                125,
+                0
+            ],
+            "v_notch_height": 50,
+            "v_notch_width": 100
+        }
+    ],
+    "reduced_params": [
+        {
+            "reduced_center": [
+                125,
+                125
+            ],
+            "reduced_radius": 100,
+            "reduced_slice_thickness": 25
+        }
+    ],
+    "ASTRA_reconstruction": true,
+    "num_angles": 832,
+    "geometry_type": "cone",
+    "angular_range_degrees": 360,
+    "det_width_u": 11.9193,
+    "det_width_v": 11.9193,
+    "det_count_x": 1720,
+    "det_count_y": 1070,
+    "i0": 100000000.0,
+    "algorithm": "FDK_CUDA",
+    "show_plots": true,
+    "source_origin": 5248.325,
+    "origin_det": 57307.693,
+    "orientation_jitter_deg": 25
+}

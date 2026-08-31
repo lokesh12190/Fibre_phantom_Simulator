@@ -1,0 +1,29 @@
+# Volume data - far too large for git (single .nii files are ~1.1 GB).
+# The reference dataset is transferred alongside the repo, not through git.
+data/
+*.nii
+*.nii.gz
+*.npy
+*.npz
+*.zraw
+*.mhd
+*.hdf5
+*.h5
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# Run logs / scratch
+*.log
+nohup.out
+
+# OS
+Thumbs.db
+.DS_Store
