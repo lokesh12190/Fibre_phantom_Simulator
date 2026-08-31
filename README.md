@@ -206,6 +206,24 @@ nib.save(nib.Nifti1Image(volume.astype(np.float32), np.eye(4)),
 
 Then score `my_reconstruction.nii` with Step 3.
 
+**For an iterative method**, `examples/custom_iterative.py` is a runnable
+template. You do not have to reimplement the geometry: ASTRA exposes it as a
+linear operator, and you supply only the iteration.
+
+```python
+W = astra.OpTomo(proj_id)
+sino   = W * volume      # forward projection, A x
+volume = W.T * sino      # back projection,    A^T y
+```
+
+Replace its `reconstruct()` function with your method and the rest — loading,
+geometry, saving, the scoring command — is unchanged.
+
+```bash
+python examples/custom_iterative.py \
+    --dataset data/full_realistic_820 --which noisy --out my_result.nii
+```
+
 ### What the projection values are
 
 The projections are **line integrals of attenuation, not raw photon counts.**
@@ -312,6 +330,8 @@ analysis/
   reconstruct_from_projections.py  reconstruct from geometry.json alone
   score_reconstruction.py          score a reconstruction against truth
   measure_artefacts.py             cupping, noise, rings, axial drift
+examples/
+  custom_iterative.py              template: your own iterative algorithm
 data/                       datasets (git-ignored)
 ```
 
