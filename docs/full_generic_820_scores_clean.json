@@ -1,0 +1,39 @@
+{
+  "truth": "data/full_generic_820/ground_truth.nii",
+  "recon": "data/full_generic_820/reconstruction_reference_clean.nii",
+  "mask_radius": 270,
+  "axial_margin": 60,
+  "intensity": {
+    "intensity_scale_a": 1.1011819821895852,
+    "intensity_offset_b": -10.604241116673897,
+    "rmse": 3.218303645709363,
+    "psnr_db": 32.12632670187208,
+    "ssim": 0.9398361277177762
+  },
+  "fibre_fraction": {
+    "true_fibre_fraction": 0.15941148175206618,
+    "otsu_fibre_fraction": 0.15843579423759965,
+    "otsu_threshold": 114.04313659667969,
+    "unmixing_fibre_fraction": 0.17378728386022702,
+    "unmixing_absolute_error": 0.014375802108160834,
+    "otsu_absolute_error": -0.0009756875144665278
+  },
+  "phase_separability": {
+    "void": {
+      "mean": 45.941976051191965,
+      "std": 12.614995736074748,
+      "voxels": 259
+    },
+    "matrix": {
+      "mean": 100.41034137523219,
+      "std": 2.6085163799684365,
+      "voxels": 134732547
+    },
+    "fibre": {
+      "mean": 127.83577808464658,
+      "std": 4.84754286143587,
+      "voxels": 25551094
+    },
+    "matrix_fibre_dprime": 7.045722355663596
+  }
+}

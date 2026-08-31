@@ -106,8 +106,15 @@ to produce a reconstruction that looks almost right but is subtly rotated.
 python analysis/score_reconstruction.py \
     --truth data/full_realistic_820/ground_truth.nii \
     --recon your_reconstruction.nii \
-    --pipe-radius 290
+    --pipe-radius 290 --axial-margin 40
 ```
+
+**Do not leave out `--axial-margin`.** In cone-beam geometry the slices at each
+end of the rotation axis are not seen from every angle and reconstruct about
+50 % low. They are not your method's fault, but if you include them they
+dominate the statistics: on this dataset they cost 6 dB of PSNR and halve the
+reported fibre/matrix separability. Use 40 for the realistic geometry, 60 for
+the generic one, and ignore those slices in any measurement you make.
 
 Your reconstruction can be on any intensity scale — the script fits it onto
 the ground-truth scale by least squares before comparing, so it measures

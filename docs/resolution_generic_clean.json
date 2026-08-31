@@ -1,0 +1,77 @@
+{
+  "dataset": "data/resolution_generic_820",
+  "which": "clean",
+  "background": 101.77666009188479,
+  "results": {
+    "rods": {
+      "1": {
+        "contrast_recovery": 0.6672273348921862,
+        "pair_dip_fraction": 0.5181545529999514,
+        "peak_value": 121.79348013865038,
+        "verdict": "resolved"
+      },
+      "2": {
+        "contrast_recovery": 0.9722206605128833,
+        "pair_dip_fraction": 0.9850608079191934,
+        "peak_value": 130.9432799072713,
+        "verdict": "resolved"
+      },
+      "3": {
+        "contrast_recovery": 0.9892799675255513,
+        "pair_dip_fraction": 0.9879300766980343,
+        "peak_value": 131.45505911765133,
+        "verdict": "resolved"
+      },
+      "4": {
+        "contrast_recovery": 0.9850389301803365,
+        "pair_dip_fraction": 1.016477320729626,
+        "peak_value": 131.3278279972949,
+        "verdict": "resolved"
+      },
+      "6": {
+        "contrast_recovery": 0.9860122387800857,
+        "pair_dip_fraction": 1.000111729304027,
+        "peak_value": 131.35702725528736,
+        "verdict": "resolved"
+      },
+      "8": {
+        "contrast_recovery": 0.9848743757512372,
+        "pair_dip_fraction": 0.9952476993527644,
+        "peak_value": 131.3228913644219,
+        "verdict": "resolved"
+      }
+    },
+    "spheres": {
+      "1": {
+        "contrast_recovery": 0.2258184537638068,
+        "peak_value": 108.551213704799,
+        "verdict": "detected"
+      },
+      "2": {
+        "contrast_recovery": 0.8212187890989758,
+        "peak_value": 126.41322376485407,
+        "verdict": "detected"
+      },
+      "3": {
+        "contrast_recovery": 0.8449470893009163,
+        "peak_value": 127.12507277091228,
+        "verdict": "detected"
+      },
+      "4": {
+        "contrast_recovery": 0.9623968329415987,
+        "peak_value": 130.64856508013276,
+        "verdict": "detected"
+      },
+      "6": {
+        "contrast_recovery": 0.9049440348253379,
+        "peak_value": 128.92498113664493,
+        "verdict": "detected"
+      },
+      "8": {
+        "contrast_recovery": 0.9412327041608658,
+        "peak_value": 130.01364121671077,
+        "verdict": "detected"
+      }
+    }
+  }
+}

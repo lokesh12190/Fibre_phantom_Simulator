@@ -1,0 +1,77 @@
+{
+  "dataset": "data/resolution_realistic_820",
+  "which": "noisy",
+  "background": 100.79021387612528,
+  "results": {
+    "rods": {
+      "1": {
+        "contrast_recovery": 0.6985249344553845,
+        "pair_dip_fraction": 0.5792569995321443,
+        "peak_value": 121.74596190978681,
+        "verdict": "resolved, contrast down to 70%"
+      },
+      "2": {
+        "contrast_recovery": 0.9633411127620036,
+        "pair_dip_fraction": 0.9440808648307203,
+        "peak_value": 129.6904472589854,
+        "verdict": "resolved"
+      },
+      "3": {
+        "contrast_recovery": 0.9847564790463802,
+        "pair_dip_fraction": 0.9946478055970408,
+        "peak_value": 130.33290824751668,
+        "verdict": "resolved"
+      },
+      "4": {
+        "contrast_recovery": 0.9826286518233445,
+        "pair_dip_fraction": 1.0014637821768462,
+        "peak_value": 130.2690734308256,
+        "verdict": "resolved"
+      },
+      "6": {
+        "contrast_recovery": 0.9811784835930912,
+        "pair_dip_fraction": 1.023599078944745,
+        "peak_value": 130.22556838391802,
+        "verdict": "resolved"
+      },
+      "8": {
+        "contrast_recovery": 0.9804987866672169,
+        "pair_dip_fraction": 1.0089246105135468,
+        "peak_value": 130.20517747614178,
+        "verdict": "resolved"
+      }
+    },
+    "spheres": {
+      "1": {
+        "contrast_recovery": 0.22813345778042685,
+        "peak_value": 107.63421760953808,
+        "verdict": "detected"
+      },
+      "2": {
+        "contrast_recovery": 0.7825262835668335,
+        "peak_value": 124.26600238313029,
+        "verdict": "detected"
+      },
+      "3": {
+        "contrast_recovery": 0.8751540264851869,
+        "peak_value": 127.04483467068088,
+        "verdict": "detected"
+      },
+      "4": {
+        "contrast_recovery": 0.9657438169235386,
+        "peak_value": 129.76252838383144,
+        "verdict": "detected"
+      },
+      "6": {
+        "contrast_recovery": 0.8994829718477343,
+        "peak_value": 127.77470303155731,
+        "verdict": "detected"
+      },
+      "8": {
+        "contrast_recovery": 0.9420598587462431,
+        "peak_value": 129.05200963851257,
+        "verdict": "detected"
+      }
+    }
+  }
+}

@@ -40,6 +40,24 @@ relation to any real machine.
 The 256³ pilots are small and quick to iterate on; the 820 datasets are the
 real thing.
 
+### Fibre-free reference phantoms
+
+Four more datasets contain no fibres at all. They are calibration objects: the
+content is exactly known and deliberately simple, so anything in a
+reconstruction that should not be there can be measured rather than eyeballed.
+
+| Dataset | Content | What it is for |
+|---|---|---|
+| `data/uniform_realistic_820` | solid resin cylinder, 100.000 % resin | Truth is one flat value, so any variation is artefact |
+| `data/uniform_generic_820` | same, generic geometry | |
+| `data/resolution_realistic_820` | rod pairs + spheres at radii 1,2,3,4,6,8 vox | What feature size the geometry can actually resolve |
+| `data/resolution_generic_820` | same, generic geometry | |
+
+Measure them with `analysis/measure_artefacts.py` and
+`analysis/measure_resolution.py`. What they showed is in
+**Reconstruction limits** below — including one result that changes how the
+fibre datasets should be scored.
+
 Every dataset contains:
 
 ```
@@ -62,35 +80,113 @@ run_parameters.json           every parameter, plus the true phase fractions
 Measured, not estimated — reproduce with the commands below.
 
 All figures below are for the shipped FDK reference reconstruction, scored
-inside the specimen mask eroded 20 voxels inward from the pipe wall.
+inside the specimen mask eroded 20 voxels inward from the pipe wall **and
+trimmed axially** (`--axial-margin 40` for the realistic geometry, 60 for the
+generic one). The axial trim is not cosmetic — see **Reconstruction limits**.
 
-| | full_realistic_820 | full_generic_820 | pilot_realistic_256 | pilot_generic_256 |
-|---|---|---|---|---|
-| Reconstructed from `geometry.json` alone | **exact, diff = 0** | **exact, diff = 0** | **exact, diff = 0** | **exact, diff = 0** |
-| Specimen truncated on detector | no | no | no | no |
-| Regenerates identically from its seed | yes | yes | yes | yes |
-| True fibre fraction (eroded mask) | 15.62 % | 15.62 % | 11.09 % | 11.09 % |
-| Otsu error, clean | **−0.49 pp** | −0.95 pp | **−0.10 pp** | −0.45 pp |
-| Otsu error, noisy | +0.85 pp | +0.91 pp | +0.80 pp | +0.53 pp |
-| matrix/fibre *d′*, clean | **3.78** | 3.04 | **5.07** | 3.09 |
-| matrix/fibre *d′*, noisy | 3.00 | 2.59 | 3.78 | 2.80 |
-| SSIM, clean → noisy | 0.916 → 0.782 | 0.897 → 0.783 | 0.908 → 0.819 | 0.896 → 0.848 |
-| PSNR, clean | 25.8 dB | 24.7 dB | 28.1 dB | 25.2 dB |
+| | full_realistic_820 | full_generic_820 |
+|---|---|---|
+| Reconstructed from `geometry.json` alone | **exact, diff = 0** | **exact, diff = 0** |
+| Specimen truncated on detector | no | no |
+| Regenerates identically from its seed | yes | yes |
+| True fibre fraction (scored region) | 15.95 % | 15.94 % |
+| Otsu error, clean | **−0.12 pp** | **−0.10 pp** |
+| Otsu error, noisy | +0.78 pp | +0.77 pp |
+| matrix/fibre *d′*, clean | **7.04** | **7.05** |
+| matrix/fibre *d′*, noisy | 3.94 | 3.92 |
+| SSIM, clean → noisy | 0.940 → 0.776 | 0.940 → 0.775 |
+| PSNR, clean | 32.1 dB | 32.1 dB |
+| Usable fraction of the axial range | 90 % | 85 % |
 
 Three things this table is saying:
 
 - ***d′* is the row that matters.** It says the fibres are genuinely resolved,
   so a measured fibre fraction reflects the material rather than the
-  reconstruction. Every clean reconstruction clears 3.0. An earlier
+  reconstruction. Both clean reconstructions reach 7, and Otsu then recovers
+  the true fibre fraction to about a tenth of a percentage point. An earlier
   1-voxel-fibre dataset scored 2.27 with a +3.83 pp Otsu error, which is what
   motivated the radius-3 fibres used here.
-- **The noise is real.** SSIM drops by 0.05–0.13 and *d′* falls below 3 on the
-  generic geometry, so the noisy sets are a genuine test rather than a copy of
-  the clean ones.
-- **The realistic geometry reconstructs better than the generic one** at the
-  same specimen and photon count (*d′* 3.78 vs 3.04). Its far larger
-  source-to-object distance gives a 4.5° cone half-angle against 7.3°, and
-  less cone-beam distortion away from the central plane.
+- **The noise is real.** SSIM falls from 0.94 to 0.78 and *d′* roughly halves,
+  so the noisy sets are a genuine test rather than a copy of the clean ones.
+- **The two geometries are equivalent where they can be trusted.** Scored over
+  the usable region they are indistinguishable (*d′* 7.04 vs 7.05). The wider
+  cone of the generic geometry does not degrade the interior; it only makes the
+  unusable margin at each end larger, costing 5 % more of the volume. An
+  earlier version of this table claimed the realistic geometry reconstructed
+  better — that difference was entirely the axial artefact described below.
+
+## Reconstruction limits
+
+Measured on the fibre-free phantoms, where the true answer is exactly known.
+
+### The ends of the rotation axis are unusable
+
+This is the one that changes how you should score anything. In cone-beam
+geometry the slices at each end of the rotation axis are not seen from every
+angle, so FDK reconstructs them very badly. On the uniform phantom, where every
+voxel should read 100:
+
+| geometry | cone half-angle | slice 0 reads | unusable margin each end |
+|---|---|---|---|
+| realistic | 4.5° | 51.6 (**−49 %**) | 35 slices |
+| generic | 7.3° | 51.2 (**−50 %**) | 56 slices |
+
+Including that region in a score is not a small effect. On
+`full_realistic_820`, trimming 40 slices from each end changes the result from
+PSNR 25.8 dB / *d′* 3.78 to **PSNR 32.1 dB / *d′* 7.04** — the broken ends were
+dominating the statistics of an otherwise good reconstruction.
+
+So pass `--axial-margin` to `score_reconstruction.py` (40 for the realistic
+geometry, 60 for the generic one), and ignore those slices in any measurement
+you make. Everything between them is flat to within 1 %.
+
+### What is resolvable
+
+From the resolution phantom, isolated features in clean resin:
+
+| radius (vox) | contrast recovered | pair separable? |
+|---|---|---|
+| 1 | 70 % | yes, but contrast down to 70 % |
+| 2 | 96 % | yes |
+| 3 and above | 98 % | yes |
+
+**Isolated 1-voxel features resolve.** This is worth stating carefully, because
+it is easy to conclude the opposite from the fibre data. The scan geometry is
+not the limitation. What defeats 1-voxel fibres in a real specimen is
+**density**: at 15 vol% every fibre has neighbours, their blur overlaps and
+fills the gaps between them, and the fibre and matrix intensity distributions
+merge. Treat the table above as a best case, and judge a real specimen by the
+*d′* that `score_reconstruction.py` reports on an actual fibre dataset.
+
+Note also that a radius-1 *sphere* recovers only 23 % of its contrast against
+70 % for a radius-1 *rod*. Same radius, very different outcome: a rod is
+extended along the beam and accumulates far more signal. Compact features such
+as small voids are much harder to see than fibres of the same radius.
+
+### Noise floor
+
+| | clean | noisy |
+|---|---|---|
+| noise std inside the specimen | 0.63 | 5.14 |
+| as a fraction of fibre contrast (30) | 2.1 % | **17 %** |
+
+In the noisy datasets the reconstruction noise is 17 % of the entire signal a
+fibre produces. That is a hard floor on what any segmentation can achieve.
+
+### What this simulation does NOT reproduce
+
+Both are worth knowing before treating these datasets as a stand-in for a real
+scan:
+
+- **No beam hardening, so no cupping.** Measured cupping is +0.003 across the
+  radius, which is zero. ASTRA's forward projection is a monochromatic line
+  integral; there is no X-ray spectrum. A real scan of this material will show
+  cupping that this data cannot reproduce, so it will not exercise a
+  beam-hardening correction.
+- **No ring artefacts** (measured 0.03, i.e. none). Rings come from
+  detector-element-to-element variation, which is not simulated.
+
+---
 
 ### Fibre content is not radially uniform
 
@@ -143,8 +239,12 @@ Score any reconstruction against the truth:
 python analysis/score_reconstruction.py \
     --truth data/full_realistic_820/ground_truth.nii \
     --recon your_reconstruction.nii \
-    --pipe-radius 290
+    --pipe-radius 290 --axial-margin 40
 ```
+
+`--axial-margin` excludes the unusable slices at each end of the rotation axis.
+Use 40 for the realistic geometry and 60 for the generic one. Leaving it out
+makes any reconstruction look considerably worse than it is.
 
 Your reconstruction may be on any intensity scale — the scorer fits it onto
 the ground-truth scale by least squares first, so it measures structure rather
@@ -206,9 +306,12 @@ fiber_phantom/
   scan_export.py            scan simulation, projection + geometry export
 generate_for_reconstruction.py   CLI: config in, dataset out
 configs/                    specimen and scan parameter sets
+make_reference_phantom.py        CLI: fibre-free calibration phantoms
 analysis/
   reconstruct_from_projections.py  reconstruct from geometry.json alone
   score_reconstruction.py          score a reconstruction against truth
+  measure_artefacts.py             cupping, noise, rings, axial drift
+  measure_resolution.py            what feature size is resolvable
   diagnose_volume.py               intensity statistics and histogram
   segment_volume.py                void/matrix/fibre segmentation
 data/                       datasets (git-ignored)
@@ -257,6 +360,10 @@ Forked from [marychrisgo/Fiber-Phantoms](https://github.com/marychrisgo/Fiber-Ph
 - **Replaced hardcoded paths with CLI arguments** throughout.
 - **Added `score_reconstruction.py` and `reconstruct_from_projections.py`**,
   neither of which existed upstream.
+- **Added fibre-free reference phantoms** (`make_reference_phantom.py`) with
+  `measure_artefacts.py` and `measure_resolution.py`. These are what revealed
+  that cone-beam end slices reconstruct roughly 50 % low, which had been
+  silently dominating every score.
 
 ## License
 

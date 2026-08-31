@@ -18,16 +18,16 @@ least squares. That measures structural fidelity rather than penalising a
 global brightness or contrast offset, which is almost never what you care
 about when judging a reconstruction algorithm.
 
+For cone-beam data, pass --axial-margin. The slices at each end of the
+rotation axis are not seen from every angle and reconstruct very badly, and
+leaving them in dominates the statistics: on full_realistic_820 they cost
+6 dB of PSNR and halve the reported matrix/fibre separability.
+
 Usage:
     python analysis/score_reconstruction.py \
-        --truth data/reference_206k_FDK/ground_truth.nii \
-        --recon data/reference_206k_FDK/reconstruction_noisy.nii
-
-    # include segmentation agreement
-    python analysis/score_reconstruction.py \
-        --truth data/reference_206k_FDK/ground_truth.nii \
-        --recon data/reference_206k_FDK/reconstruction_noisy.nii \
-        --labels data/reference_206k_FDK/segmentation/labels.npy
+        --truth data/full_realistic_820/ground_truth.nii \
+        --recon data/full_realistic_820/reconstruction_reference_noisy.nii \
+        --pipe-radius 290 --axial-margin 40
 """
 
 import argparse
@@ -59,18 +59,34 @@ def load_volume(path):
     return np.asarray(nib.load(path).dataobj)
 
 
-def pipe_mask(shape, pipe_radius, erode):
-    """Cylindrical specimen mask, eroded inward from the true pipe wall.
+def pipe_mask(shape, pipe_radius, erode, axial_margin=0):
+    """Cylindrical specimen mask, trimmed radially and optionally axially.
 
-    Erosion matters: voxels at the pipe boundary are a blurred mix of resin
-    and outside-air, and including them dominates the error statistics with
-    an edge effect that says nothing about interior reconstruction quality.
+    Radial erosion matters: voxels at the pipe boundary are a blurred mix of
+    resin and outside-air, and including them dominates the error statistics
+    with an edge effect that says nothing about interior quality.
+
+    Axial trimming matters for cone-beam data. The slices at each end of the
+    rotation axis are not seen from every angle, so FDK reconstructs them very
+    badly - measured on a uniform phantom, the outermost slice comes out about
+    50% low, and the affected margin grows with the cone angle (about 35 slices
+    at a 4.5 degree half-angle, 56 at 7.3). Leaving them in makes a
+    reconstruction look far worse than it is everywhere it can actually be
+    trusted. Default 0 keeps the whole volume; see --axial-margin.
     """
     radius = pipe_radius - erode
     cy, cz = shape[1] / 2, shape[2] / 2
     y, z = np.indices((shape[1], shape[2]))
     disc = ((y - cy) ** 2 + (z - cz) ** 2) <= radius ** 2
-    return np.broadcast_to(disc[np.newaxis, :, :], shape)
+    mask = np.broadcast_to(disc[np.newaxis, :, :], shape).copy()
+    if axial_margin > 0:
+        if 2 * axial_margin >= shape[0]:
+            raise ValueError(
+                f"axial_margin {axial_margin} removes the whole volume "
+                f"({shape[0]} slices).")
+        mask[:axial_margin] = False
+        mask[shape[0] - axial_margin:] = False
+    return mask
 
 
 def align_intensity(recon_vals, truth_vals):
@@ -270,6 +286,13 @@ def main():
     parser.add_argument("--erode", type=int, default=20,
                         help="shrink mask inward to skip the blurred pipe "
                              "boundary (default: 20)")
+    parser.add_argument("--axial-margin", type=int, default=0,
+                        help="exclude this many slices at each end of the "
+                             "rotation axis, where cone-beam reconstruction "
+                             "is unreliable. Measure the right value with "
+                             "analysis/measure_artefacts.py on a uniform "
+                             "phantom; 40 suits the realistic 820 geometry "
+                             "and 60 the generic one (default: 0, keep all)")
     parser.add_argument("--json", help="also write the report to this path")
     args = parser.parse_args()
 
@@ -287,14 +310,19 @@ def main():
             "Both must be on the same voxel grid."
         )
 
-    mask = pipe_mask(truth.shape, args.pipe_radius, args.erode)
-    print(f"Specimen mask: radius {args.pipe_radius - args.erode} "
+    mask = pipe_mask(truth.shape, args.pipe_radius, args.erode,
+                     args.axial_margin)
+    axial_note = (f", axial slices {args.axial_margin}-"
+                  f"{truth.shape[0] - args.axial_margin}"
+                  if args.axial_margin else ", full axial range")
+    print(f"Specimen mask: radius {args.pipe_radius - args.erode}{axial_note} "
           f"({np.count_nonzero(mask):,} voxels)\n")
 
     report = {
         "truth": args.truth,
         "recon": args.recon,
         "mask_radius": args.pipe_radius - args.erode,
+        "axial_margin": args.axial_margin,
     }
 
     print("--- Intensity fidelity ---")

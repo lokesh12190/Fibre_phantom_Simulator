@@ -21,8 +21,8 @@ analysis/score_reconstruction.py first and check the matrix-vs-fibre d'.
 
 Usage:
     python analysis/segment_volume.py \
-        --input data/reference_206k_FDK/reconstruction_clean.nii \
-        --outdir data/reference_206k_FDK/segmentation
+        --input data/full_realistic_820/reconstruction_reference_clean.nii \
+        --outdir data/full_realistic_820/segmentation
 """
 
 import argparse
