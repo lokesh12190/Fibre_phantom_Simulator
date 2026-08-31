@@ -154,9 +154,9 @@ brightness.
 
 ```
 --- Intensity fidelity ---
-  RMSE   : 3.2211
-  PSNR   : 32.12 dB
-  SSIM   : 0.9398          how close to the truth (1.0 = perfect)
+  RMSE   : 3.2211 attenuation units  (10.7% of the fibre-vs-resin contrast of 30)
+  PSNR   : 32.12 dB  (referenced to the 0-130 attenuation range)
+  SSIM   : 0.9398
 
 --- Fibre volume fraction ---
   true            : 15.945 %      what is actually there
@@ -167,7 +167,12 @@ brightness.
   matrix vs fibre d' = 7.04  (cleanly separable)
 ```
 
-- **SSIM / PSNR** — overall fidelity. Higher is better.
+- **RMSE** — in **attenuation units, not a percentage.** The phantom is built
+  with air 0, resin 100, fibre 130, so an RMSE of 3.22 means the typical voxel
+  is off by 3.22 of those units. Judge it against the **fibre-vs-resin contrast
+  of 30**, since telling those two apart is the entire task — dividing by 100
+  or by the full 0–130 range makes any result look better than it is.
+- **PSNR / SSIM** — overall fidelity. Higher is better.
 - **Fibre fraction error** — the practical one. On a real scan you could never
   know this number.
 - **d′** — whether fibres are resolvable at all. Above 3 a threshold can

@@ -7,7 +7,11 @@ answer is known exactly.
 
 Reports three families of metric:
 
-  1. Intensity fidelity  - RMSE / PSNR / SSIM against ground truth
+  1. Intensity fidelity  - RMSE / PSNR / SSIM against ground truth.
+     RMSE is in attenuation units, not a percentage: the phantom is built
+     with air 0, resin 100, fibre 130, so an RMSE of 6 means the typical
+     voxel is off by 6 of those units. Judge it against the fibre-vs-resin
+     contrast of 30, since separating those two is the whole task.
   2. Fibre volume fraction - true vs. measured, by Otsu and by linear unmixing
   3. Segmentation agreement - per-class Dice and IoU, if labels are supplied
 
@@ -107,10 +111,19 @@ def intensity_metrics(truth, recon, mask):
     data_range = ATTENUATION_FIBER - ATTENUATION_AIR
     psnr = float(20 * np.log10(data_range / rmse)) if rmse > 0 else float("inf")
 
+    # RMSE is in attenuation units, on the scale the phantom was built with
+    # (air 0, resin 100, fibre 130). Quoting it bare invites reading it as a
+    # percentage of 100, which flatters it: the task is separating fibre from
+    # resin, and those differ by only 30, so that is the denominator that says
+    # whether the error is small relative to the signal being measured.
+    fibre_contrast = ATTENUATION_FIBER - ATTENUATION_RESIN
+
     return {
         "intensity_scale_a": float(a),
         "intensity_offset_b": float(b),
         "rmse": rmse,
+        "rmse_units": "attenuation (air 0, resin 100, fibre 130)",
+        "rmse_pct_of_fibre_contrast": float(100 * rmse / fibre_contrast),
         "psnr_db": psnr,
         "ssim": slicewise_ssim(truth, recon, mask, a, b),
     }
@@ -327,8 +340,12 @@ def main():
 
     print("--- Intensity fidelity ---")
     report["intensity"] = intensity_metrics(truth, recon, mask)
-    print(f"  RMSE      : {report['intensity']['rmse']:.4f}")
-    print(f"  PSNR      : {report['intensity']['psnr_db']:.2f} dB")
+    print(f"  RMSE      : {report['intensity']['rmse']:.4f} attenuation units"
+          f"  ({report['intensity']['rmse_pct_of_fibre_contrast']:.1f}% of the "
+          f"fibre-vs-resin contrast of "
+          f"{ATTENUATION_FIBER - ATTENUATION_RESIN:.0f})")
+    print(f"  PSNR      : {report['intensity']['psnr_db']:.2f} dB"
+          f"  (referenced to the 0-{ATTENUATION_FIBER:.0f} attenuation range)")
     ssim = report["intensity"]["ssim"]
     print(f"  SSIM      : {ssim:.4f}" if ssim is not None
           else "  SSIM      : (needs scikit-image)")
