@@ -24,10 +24,22 @@ gradient descent with a non-negativity constraint - deliberately simple, and
 deliberately not one of ASTRA's built-ins. Replace `reconstruct` with your own
 method and the rest of the workflow is unchanged.
 
+Convergence is worth watching. Measured on full_realistic_820, noisy:
+
+    iterations   d' (matrix vs fibre)   verdict
+        8                0.21           fibres invisible
+       10                0.72           fibres invisible
+       60                3.80           cleanly separable
+
+At 60 iterations this scores SSIM 0.836 against FDK's 0.776 on the same
+data - smoother - but its Otsu fibre-fraction error is +7.2 pp against
+FDK's +0.8 pp. Better by one measure, worse by another, which is the kind
+of trade-off this dataset exists to expose. Roughly 11 minutes on an L40.
+
 Usage:
     python examples/custom_iterative.py \
         --dataset data/full_realistic_820 --which noisy \
-        --iterations 10 --out my_iterative_result.nii
+        --out my_iterative_result.nii
 
 Then score it:
     python analysis/score_reconstruction.py \

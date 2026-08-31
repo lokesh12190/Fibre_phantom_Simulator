@@ -206,6 +206,31 @@ nib.save(nib.Nifti1Image(volume.astype(np.float32), np.eye(4)),
 
 Then score `my_reconstruction.nii` with Step 3.
 
+**If your method is iterative**, you do not need to implement projection at
+all — ASTRA supplies the operators and you supply only the iteration:
+
+```python
+W = astra.OpTomo(proj_id)
+sino   = W * volume      # forward projection   A x
+volume = W.T * sino      # back projection      A^T y
+```
+
+`examples/custom_iterative.py` is a complete worked example built this way,
+with a single `reconstruct()` function to replace. Run it as-is to see the
+whole path end to end:
+
+```bash
+python examples/custom_iterative.py \
+    --dataset data/full_realistic_820 --which noisy \
+    --out my_iterative_result.nii
+```
+
+Watch convergence when you swap in your own method. That example needs about
+60 iterations before fibre and matrix become separable at all; at 10 it scores
+*d′* 0.72 and the fibres are invisible. **An under-converged reconstruction and
+a bad algorithm look identical in the fidelity metrics — `d′` is what tells
+them apart.**
+
 **For an iterative method**, `examples/custom_iterative.py` is a runnable
 template. You do not have to reimplement the geometry: ASTRA exposes it as a
 linear operator, and you supply only the iteration.
@@ -326,6 +351,8 @@ fiber_phantom/
 generate_for_reconstruction.py   CLI: config in, fibre dataset out
 make_reference_phantom.py        CLI: config in, fibre-free phantom out
 configs/                    specimen and scan parameter sets
+examples/
+  custom_iterative.py         worked example: your own iterative algorithm
 analysis/
   reconstruct_from_projections.py  reconstruct from geometry.json alone
   score_reconstruction.py          score a reconstruction against truth
