@@ -10,7 +10,8 @@ need in order to do it.
     projections_noisy.npy          projections with Poisson photon noise
     angles.npy                     rotation angle per projection, radians
     geometry.json                  full scan geometry
-    reconstruction_reference.nii   ASTRA's own reconstruction, to compare against
+    reconstruction_reference_clean.nii  ASTRA FDK from the clean projections
+    reconstruction_reference_noisy.nii  ASTRA FDK from the noisy projections
     run_parameters.json            every parameter used
 
 Requires ASTRA and a CUDA GPU.

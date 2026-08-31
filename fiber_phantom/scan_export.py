@@ -10,7 +10,8 @@ What gets written:
     projections_noisy.npy   projections with Poisson photon noise
     angles.npy              rotation angle of each projection, in radians
     geometry.json           everything needed to rebuild the scan geometry
-    reconstruction_reference.nii   optional ASTRA reconstruction, for comparison
+    reconstruction_reference_clean.nii   optional ASTRA reconstruction, clean
+    reconstruction_reference_noisy.nii   optional ASTRA reconstruction, noisy
 
 Projections are line integrals of attenuation, not raw photon counts: the
 noisy set is produced by drawing Poisson counts and converting back with
@@ -323,24 +324,31 @@ def simulate_and_export(volume, params, outdir, save_reference_reconstruction=Tr
         json.dump(geometry, f, indent=4)
     print("  saved geometry.json")
 
-    # ---- optional reference reconstruction ----
+    # ---- optional reference reconstructions ----
+    # One per projection set. Reconstructing only the clean set would give a
+    # baseline that nobody can fairly compare against, since a method under
+    # test will be working from the noisy projections.
     if save_reference_reconstruction:
-        print(f"Reconstructing reference volume ({params['algorithm']})...")
         import nibabel as nib
 
-        rec_id = astra.data3d.create("-vol", vol_geom)
-        cfg = astra.astra_dict(params["algorithm"])
-        cfg["ReconstructionDataId"] = rec_id
-        cfg["ProjectionDataId"] = proj_id
-        alg_id = astra.algorithm.create(cfg)
-        astra.algorithm.run(alg_id, 200)
-        rec = astra.data3d.get(rec_id)
-        astra.algorithm.delete(alg_id)
-        astra.data3d.delete(rec_id)
+        noisy_id = astra.data3d.create("-sino", proj_geom, projections_noisy)
+        for label, sino_id in (("clean", proj_id), ("noisy", noisy_id)):
+            print(f"Reconstructing {label} reference ({params['algorithm']})...")
+            rec_id = astra.data3d.create("-vol", vol_geom)
+            cfg = astra.astra_dict(params["algorithm"])
+            cfg["ReconstructionDataId"] = rec_id
+            cfg["ProjectionDataId"] = sino_id
+            alg_id = astra.algorithm.create(cfg)
+            astra.algorithm.run(alg_id, 200)
+            rec = astra.data3d.get(rec_id)
+            astra.algorithm.delete(alg_id)
+            astra.data3d.delete(rec_id)
 
-        path = os.path.join(outdir, "reconstruction_reference.nii")
-        nib.save(nib.Nifti1Image(rec, affine=np.eye(4)), path)
-        print(f"  saved reconstruction_reference.nii")
+            name = f"reconstruction_reference_{label}.nii"
+            nib.save(nib.Nifti1Image(rec, affine=np.eye(4)),
+                     os.path.join(outdir, name))
+            print(f"  saved {name}")
+        astra.data3d.delete(noisy_id)
 
     astra.data3d.delete(proj_id)
     return geometry

@@ -86,19 +86,28 @@ def main():
     astra.data3d.delete(proj_id)
 
     out = args.out or os.path.join(
-        args.dataset, f"reconstruction_from_projections_{args.which}.nii")
+        args.dataset, f"my_reconstruction_{args.which}.nii")
     nib.save(nib.Nifti1Image(rec, affine=np.eye(4)), out)
     print(f"volume {rec.shape}, range {rec.min():.3f} to {rec.max():.3f}")
     print(f"Saved {out}")
 
-    reference = os.path.join(args.dataset, "reconstruction_reference.nii")
-    if args.which == "clean" and os.path.exists(reference):
+    # Compare against the shipped reference for the same projection set. Only
+    # meaningful when the algorithm matches the one that produced it; with
+    # --algorithm overridden a difference is expected, not a fault.
+    reference = os.path.join(
+        args.dataset, f"reconstruction_reference_{args.which}.nii")
+    if os.path.exists(reference):
         ref = np.asarray(nib.load(reference).dataobj)
         diff = float(np.abs(ref - rec).max())
-        print(f"\nMax difference vs reconstruction_reference.nii: {diff:.6g}")
-        print("  (near zero confirms geometry.json fully describes the scan)"
-              if diff < 1e-3 else
-              "  (large difference - the geometry description may be incomplete)")
+        name = os.path.basename(reference)
+        print(f"\nMax difference vs {name}: {diff:.6g}")
+        if args.algorithm and args.algorithm != "FDK_CUDA":
+            print(f"  (a difference is expected here - you overrode the "
+                  f"algorithm to {args.algorithm})")
+        elif diff < 1e-3:
+            print("  (near zero confirms geometry.json fully describes the scan)")
+        else:
+            print("  (large difference - the geometry description may be incomplete)")
 
 
 if __name__ == "__main__":

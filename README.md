@@ -20,10 +20,10 @@ If you are here to reconstruct and score, read
 
 | Dataset | Volume | Angles | Detector | Geometry | Fibre | Size |
 |---|---|---|---|---|---|---|
-| `data/full_realistic_820` | 820×600×600 | 832 over 360° | 1720×1070 | real scanner, mag 11.92 | 15.44 vol% | 26 GB |
-| `data/full_generic_820` | 820×600×600 | 832 over 360° | 1200×1024 | round-number, mag 2 | 15.44 vol% | 18 GB |
-| `data/pilot_realistic_256` | 256³ | 180 over 360° | 512×512 | real scanner, mag 11.92 | 10.82 vol% | 850 MB |
-| `data/pilot_generic_256` | 256³ | 180 over 360° | 512×512 | round-number, mag 2 | 10.82 vol% | 850 MB |
+| `data/full_realistic_820` | 820×600×600 | 832 over 360° | 1720×1070 | real scanner, mag 11.92 | 15.44 vol% | 27 GB |
+| `data/full_generic_820` | 820×600×600 | 832 over 360° | 1200×1024 | round-number, mag 2 | 15.44 vol% | 19 GB |
+| `data/pilot_realistic_256` | 256³ | 180 over 360° | 512×512 | real scanner, mag 11.92 | 10.82 vol% | 914 MB |
+| `data/pilot_generic_256` | 256³ | 180 over 360° | 512×512 | round-number, mag 2 | 10.82 vol% | 914 MB |
 
 **`full_realistic_820`** is the main deliverable: the real PA6GF30 scanner
 geometry at the real specimen size, with fibre content matched to the PA6GF30
@@ -50,7 +50,8 @@ projections_clean_tiff/       same, one 32-bit TIFF per angle
 projections_noisy_tiff/
 angles.npy                    rotation angle per projection, radians
 geometry.json                 full scan geometry
-reconstruction_reference.nii  ASTRA FDK result, as a known-good comparison
+reconstruction_reference_clean.nii   ASTRA FDK from the clean projections
+reconstruction_reference_noisy.nii   ASTRA FDK from the noisy projections
 run_parameters.json           every parameter, plus the true phase fractions
 ```
 

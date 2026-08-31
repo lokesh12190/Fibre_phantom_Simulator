@@ -21,7 +21,8 @@ the ground truth.
 | `angles.npy` | Rotation angle of each projection, in **radians** |
 | `geometry.json` | The full scan geometry — everything you need to reconstruct |
 | `ground_truth.nii` | **The truth.** Exactly three values: `0` air/void, `100` resin matrix, `130` glass fibre |
-| `reconstruction_reference.nii` | An ASTRA FDK reconstruction, so you have a known-good result to check against |
+| `reconstruction_reference_clean.nii` | Plain ASTRA FDK reconstructed from the **clean** projections — the best case |
+| `reconstruction_reference_noisy.nii` | Plain ASTRA FDK reconstructed from the **noisy** projections — the baseline to beat |
 | `run_parameters.json` | Every parameter used, including the true phase fractions |
 
 ---
@@ -67,7 +68,7 @@ python analysis/reconstruct_from_projections.py \
 
 It reads nothing but `geometry.json` and the projection files. Run it on
 `--which clean` and it will compare its output against
-`reconstruction_reference.nii` and report the difference — currently **exactly
+`reconstruction_reference_<clean|noisy>.nii` and report the difference — currently **exactly
 zero**, which is the proof that `geometry.json` fully describes the scan.
 
 To benchmark your own method, replace the ASTRA call in that script, or build
@@ -155,7 +156,8 @@ The 256³ pilots are the same idea at 1/30th the size, for quick iteration.
    algorithm.
 2. Reconstruct `projections_noisy.npy`. Score it. The gap between the two is
    your method's noise robustness.
-3. Compare against `reconstruction_reference.nii` (plain FDK) to see where
+3. Compare against `reconstruction_reference_noisy.nii` (plain FDK on the same
+   noisy input) to see where
    your method wins.
 
 If you need a different specimen — other fibre content, curved or kinked
