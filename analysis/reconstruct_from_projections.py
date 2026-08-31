@@ -14,7 +14,7 @@ score the result with analysis/score_reconstruction.py against ground_truth.nii.
 
 Usage:
     python analysis/reconstruct_from_projections.py \
-        --dataset data/pilot_generic --which noisy --out my_reconstruction.nii
+        --dataset data/full_realistic_820 --which noisy --out my_reconstruction.nii
 """
 
 import argparse

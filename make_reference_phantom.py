@@ -26,10 +26,10 @@ them unchanged.
 
 Usage:
     python make_reference_phantom.py --shape uniform \
-        --config configs/full_realistic_820.json --out data/uniform_realistic_820 --tiff
+        --config configs/full_generic_820.json --out data/uniform_generic_820 --tiff
 
     python make_reference_phantom.py --shape resolution \
-        --config configs/full_realistic_820.json --out data/resolution_realistic_820 --tiff
+        --config configs/full_realistic_820.json --out data/my_resolution_phantom --tiff
 """
 
 import argparse

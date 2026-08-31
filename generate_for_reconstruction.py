@@ -18,11 +18,11 @@ Requires ASTRA and a CUDA GPU.
 
 Usage:
     python generate_for_reconstruction.py \
-        --config configs/pilot_generic_256.json --out data/pilot_generic
+        --config configs/full_realistic_820.json --out data/my_run --tiff
 
-    # skip the reference reconstruction (faster, smaller)
+    # skip the reference reconstructions (faster, smaller)
     python generate_for_reconstruction.py \
-        --config configs/pilot_generic_256.json --out data/pilot_generic \
+        --config configs/full_realistic_820.json --out data/my_run \
         --no-reference-reconstruction
 """
 

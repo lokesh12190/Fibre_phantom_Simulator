@@ -25,7 +25,7 @@ stopped being able to separate neighbouring fibres.
 
 Usage:
     python analysis/measure_resolution.py \
-        --dataset data/resolution_realistic_820 --which noisy
+        --dataset data/my_resolution_phantom --which noisy
 """
 
 import argparse

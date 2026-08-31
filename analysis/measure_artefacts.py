@@ -23,7 +23,7 @@ Reported:
 
 Usage:
     python analysis/measure_artefacts.py \
-        --dataset data/uniform_realistic_820 --which clean
+        --dataset data/uniform_generic_820 --which clean
 """
 
 import argparse
