@@ -279,6 +279,51 @@ def simulate_and_export(volume, params, outdir, save_reference_reconstruction=Tr
         save_tiff_stack(projections_noisy, outdir, "projections_noisy_tiff")
 
     # ---- geometry description ----
+    # JSON has no comments, so the meaning of every field is carried in the
+    # file itself under _field_descriptions. Anyone handed a dataset without
+    # this repository can then still read the geometry without guessing.
+    descriptions = {
+        "geometry_type": "'cone' or 'parallel3d'. All shipped datasets are cone.",
+        "volume_dimensions": "[fibre axis, cross-section, cross-section] in "
+                             "voxels. Your reconstruction must match this shape.",
+        "volume_array_shape": "Shape of the ground-truth array as written to disk.",
+        "num_angles": "Number of projections.",
+        "angular_range_degrees": "Total rotation covered, e.g. 360.",
+        "angles_radians_file": "File holding the rotation angle of each "
+                               "projection, in radians.",
+        "det_width_u": "Detector pixel pitch across the columns.",
+        "det_width_v": "Detector pixel pitch down the rows.",
+        "det_count_x": "Detector row count (vertical, along the rotation axis).",
+        "det_count_y": "Detector column count (horizontal).",
+        "projection_array_shape": "Shape of the projection stack on disk.",
+        "projection_axis_order": "Axis meaning of the projection array. Note "
+                                 "the angle is the MIDDLE axis, not the first.",
+        "projection_units": "What the numbers are. Line integrals of "
+                            "attenuation, already log-corrected - do not take "
+                            "a log of them again.",
+        "tiff_stacks_written": "Whether per-angle TIFF copies were also saved.",
+        "tiff_layout": "Naming and layout of those TIFF files.",
+        "i0": "Incident photon count used for the noise model.",
+        "absorption_factor": "Scale f converting attenuation to photon counts, "
+                             "fitted at scan time. Needed to invert the noise "
+                             "model back to raw counts.",
+        "truncated": "True if the specimen ran off the edge of the detector, "
+                     "in which case the data cannot be reconstructed correctly.",
+        "attenuation_values": "The three materials the phantom is built from. "
+                              "Ground truth contains only these values.",
+        "astra_vol_geom_call": "The exact ASTRA call matching this volume. "
+                               "create_vol_geom(Y, X, Z) expects data shaped "
+                               "(Z, Y, X), which is not a plain axis swap.",
+        "source_origin": "Distance from the X-ray source to the centre of "
+                         "rotation. Arbitrary units - only ratios matter.",
+        "origin_det": "Distance from the centre of rotation to the detector.",
+        "magnification": "(source_origin + origin_det) / source_origin, at the "
+                         "centre of rotation. Off-centre points magnify more.",
+        "voxel_size_at_isocenter": "Detector pitch divided by magnification. "
+                                   "1.0 means one detector pixel spans one "
+                                   "voxel at the centre of rotation.",
+    }
+
     geometry = {
         "geometry_type": params["geometry_type"],
         "volume_dimensions": params["volume_dimensions"],
@@ -319,6 +364,9 @@ def simulate_and_export(volume, params, outdir, save_reference_reconstruction=Tr
         geometry["magnification"] = total / params["source_origin"]
         geometry["voxel_size_at_isocenter"] = (
             params["det_width_u"] / geometry["magnification"])
+
+    geometry["_field_descriptions"] = {
+        k: v for k, v in descriptions.items() if k in geometry}
 
     with open(os.path.join(outdir, "geometry.json"), "w") as f:
         json.dump(geometry, f, indent=4)

@@ -120,9 +120,10 @@ python analysis/reconstruct_from_projections.py \
 It also accepts `--algorithm SIRT3D_CUDA` and `--iterations N` if you just want
 a different ASTRA algorithm.
 
-**Option B — your own algorithm.** See
-[Using a different reconstruction algorithm](#using-a-different-reconstruction-algorithm)
-below.
+**Option B — your own algorithm.** Read `geometry.json`, the projections and
+`angles.npy`, reconstruct however you like, and save a `.nii` on the same voxel
+grid. The scorer does not care what produced it. See
+[Three things that will bite you](#three-things-that-will-bite-you) first.
 
 ---
 
@@ -211,50 +212,7 @@ over-counts fibre by 2.54 pp because its smoothing shifts both phases.
 
 ---
 
-## Using a different reconstruction algorithm
-
-This is the main use of the dataset. You need three inputs — the projections,
-the angles, and the geometry — and you must return a volume on the same voxel
-grid.
-
-```python
-import json
-import numpy as np
-import nibabel as nib
-
-DATASET = "data/full_realistic_820"
-
-geom   = json.load(open(f"{DATASET}/geometry.json"))
-proj   = np.load(f"{DATASET}/projections_noisy.npy")   # (det_row, angle, det_col)
-angles = np.load(f"{DATASET}/angles.npy")              # radians
-
-# ---------------------------------------------------------------
-# Your reconstruction goes here. It must return an array of shape
-# geom["volume_dimensions"] == (820, 600, 600).
-# The intensity scale does not matter.
-volume = my_reconstruction(proj, angles, geom)
-# ---------------------------------------------------------------
-
-nib.save(nib.Nifti1Image(volume.astype(np.float32), np.eye(4)),
-         "my_reconstruction.nii")
-```
-
-Then score `my_reconstruction.nii` with Step 3.
-
-**If your method is iterative**, you do not need to implement projection at
-all — ASTRA supplies the operators and you supply only the iteration:
-
-```python
-W = astra.OpTomo(proj_id)
-sino   = W * volume      # forward projection   A x
-volume = W.T * sino      # back projection      A^T y
-```
-
-Watch `d′` while your method converges. An under-converged reconstruction and
-a genuinely bad algorithm look identical in RMSE and SSIM; `d′` is what tells
-them apart.
-
-### What the projection values are
+## What the projection values are
 
 The projections are **line integrals of attenuation, not raw photon counts.**
 They are already log-corrected — **do not take a log of them again.** Feed them
@@ -271,7 +229,7 @@ with `i0` and the absorption factor `f` both recorded in `geometry.json`. If
 you would rather start from raw counts and apply your own correction, invert
 that relation — or ask, and the counts can be exported directly.
 
-### What `geometry.json` gives you
+## What `geometry.json` gives you
 
 | Field | Meaning |
 |---|---|
@@ -288,7 +246,7 @@ The distances are in a consistent arbitrary unit, not millimetres. Only their
 ratios matter, and they are scaled so one detector pixel equals one voxel at
 the isocentre.
 
-### Three things that will bite you
+## Three things that will bite you
 
 **1. The angle axis is in the middle.** `projections_*.npy` has shape
 `(detector_row, angle, detector_column)` — ASTRA's convention, and not what
@@ -305,7 +263,7 @@ Pick one loader and stay with it.
 this wrong produces a reconstruction that looks almost right but is subtly
 rotated. `geometry.json` records the exact call as `astra_vol_geom_call`.
 
-### Suggested order
+## Suggested order
 
 1. Reconstruct `projections_clean.npy` and score it. This is your ceiling. If
    it does not score well, the problem is geometry handling, not your

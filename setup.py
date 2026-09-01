@@ -8,7 +8,7 @@ setup(
         "for validating reconstruction and segmentation against known ground truth"
     ),
     # Upstream copyright and authorship are recorded in LICENSE.
-    author="Fiber-Phantoms contributors",
+    author="Lokesh",
     packages=find_packages(include=["fiber_phantom", "fiber_phantom.*"]),
     python_requires=">=3.10",
     install_requires=[
