@@ -317,6 +317,43 @@ rotated. `geometry.json` records the exact call as `astra_vol_geom_call`.
 
 ---
 
+## Built-in algorithm results
+
+ASTRA offers three usable cone-beam algorithms. All were run on
+`full_realistic_820` and scored against the ground truth, so you have a
+baseline to compare your own method against.
+
+**Clean projections**
+
+| | SSIM | *d′* | fibre fraction error |
+|---|---|---|---|
+| FDK | 0.940 | **7.04** | −0.12 pp |
+| CGLS (50 iter) | **0.952** | 6.98 | **−0.10 pp** |
+| SIRT (150 iter) | 0.902 | 4.96 | +2.54 pp |
+
+**Noisy projections**
+
+| | SSIM | *d′* | fibre fraction error |
+|---|---|---|---|
+| FDK | 0.776 | 3.94 | **+0.78 pp** |
+| CGLS (50 iter) | 0.739 | 3.20 | +3.34 pp |
+| SIRT (150 iter) | **0.849** | **4.47** | +3.50 pp |
+
+True fibre fraction 15.945 %. Three things worth knowing:
+
+- **The ranking reverses.** CGLS is best on clean data and worst on noisy;
+  SIRT is the opposite. Judge an algorithm on the noise level you actually
+  have.
+- **SIRT over-counts fibre by ~2.5 pp even with no noise.** Its smoothing
+  dilates fibres by about a voxel. Do not use it to measure volume fraction.
+- **A better SSIM does not mean a better measurement.** SIRT wins SSIM on
+  noisy data and still has the worst fibre fraction.
+
+Full breakdown, including where each algorithm's errors sit, is in
+`data/full_realistic_820/reconstructions/COMPARISON.md`.
+
+---
+
 ## Generating new data
 
 Needs ASTRA and a CUDA GPU:
