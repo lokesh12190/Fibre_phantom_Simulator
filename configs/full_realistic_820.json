@@ -28,6 +28,7 @@
     "kink_return_center": 480,
     "kink_return_transition_range": 64,
     "defect_type": "none",
+    "_defect_params_note": "NOT USED. defect_type is 'none', so none of the *_params blocks below are read. They are templates: set defect_type to 'hole', 'square_notch', 'double_square_notch', 'v_notch', 'double_v_notch' or 'reduced' and the matching block is applied automatically. WARNING: hole_params and reduced_params are scaled for this 820x600x600 specimen, but square_notch_params and v_notch_params still carry values from a 256^3 pilot - their coordinates would place the notch near the bottom of the specimen and far too small. Rescale them before enabling either notch type.",
     "hole_params": [
         {
             "hole_center": [
