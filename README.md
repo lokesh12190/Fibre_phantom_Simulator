@@ -139,11 +139,31 @@ python analysis/score_reconstruction.py \
 Two flags that matter:
 
 - `--pipe-radius 290` — the specimen radius. Same for all shipped datasets.
-- `--axial-margin 40` — excludes the unusable slices at each end of the
-  rotation axis. **Use 40 for `full_realistic_820`, 60 for
-  `full_generic_820`.** Those slices are not seen from every angle and
-  reconstruct badly no matter what algorithm you use; including them makes any
-  result look considerably worse than it is.
+- `--axial-margin 40` — how many slices to ignore at **each end of the
+  rotation axis**. **Use 40 for `full_realistic_820`, 60 for
+  `full_generic_820`.**
+
+The specimen is 820 slices tall and the beam is a cone, so as the object
+rotates the top and bottom slices drift in and out of it. They are
+reconstructed from incomplete data and come out badly wrong — measured on the
+uniform phantom, where every voxel should read 100:
+
+```
+slice   0  ->  51.2   (-50%)   unusable
+slice  40  ->  96.0   ( -6%)
+slice  60  -> 102.3   (  0%)   recovered
+slice 410  -> 102.5   (  0%)   fine through the middle
+slice 819  ->  51.2   (-50%)   unusable
+```
+
+This is cone-beam geometry, not a bad reconstruction — no algorithm fixes it.
+A wider cone ruins more slices, which is the only practical difference between
+the two datasets. Those slices are ~9 % of the volume but dominate the error
+statistics: on `full_realistic_820` including them drops PSNR from 32.1 to
+25.8 dB and *d′* from 7.04 to 3.94, for the same reconstruction.
+
+Ignore them in any measurement you take from real data too — for a sub-volume,
+take it from the middle.
 
 Your reconstruction can be on **any intensity scale** — the scorer fits it onto
 the ground-truth scale by least squares first, so it measures structure, not
