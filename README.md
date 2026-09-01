@@ -20,7 +20,7 @@ If you are here to reconstruct and score, go straight to
 
 | Dataset | Volume | Angles | Detector | Geometry | Fibre | Size |
 |---|---|---|---|---|---|---|
-| `data/full_realistic_820` | 820×600×600 | 832 over 360° | 1720×1070 | real scanner, mag 11.92 | 15.44 vol% | 27 GB |
+| `data/full_realistic_820` | 820×600×600 | 832 over 360° | 1720×1070 | real scanner, mag 11.92 | 15.44 vol% | 31 GB |
 | `data/full_generic_820` | 820×600×600 | 832 over 360° | 1200×1024 | round-number, mag 2 | 15.44 vol% | 19 GB |
 
 **`full_realistic_820`** is the main deliverable: the real PA6GF30 scanner
@@ -57,6 +57,14 @@ reconstruction_reference_clean.nii   ASTRA FDK from the clean projections
 reconstruction_reference_noisy.nii   ASTRA FDK from the noisy projections
 run_parameters.json           every parameter, plus the true phase fractions
 ```
+
+Two datasets carry something extra:
+
+- `data/full_realistic_820/reconstructions/` — SIRT and CGLS results scored
+  against the truth, plus `COMPARISON.md`. See
+  [Built-in algorithm results](#built-in-algorithm-results).
+- `data/uniform_generic_820/phantom_features.json` — the exact contents of the
+  fibre-free phantom, which `measure_artefacts.py` reads.
 
 ---
 
