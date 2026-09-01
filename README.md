@@ -173,11 +173,41 @@ brightness.
   of 30**, since telling those two apart is the entire task — dividing by 100
   or by the full 0–130 range makes any result look better than it is.
 - **PSNR / SSIM** — overall fidelity. Higher is better.
-- **Fibre fraction error** — the practical one. On a real scan you could never
-  know this number.
-- **d′** — whether fibres are resolvable at all. Above 3 a threshold can
-  separate matrix from fibre; below 2 no method can, and any fibre fraction you
-  compute is an artefact rather than a property of the material.
+
+**Fibre fraction error** — the practical number. The specimen is 15.945 % fibre
+by volume, known exactly. You threshold your reconstruction, count the voxels
+above the cut, and compare:
+
+```
+true 15.945 %  →  measured 16.724 %  →  error +0.78 pp
+```
+
+`pp` is percentage *points*, not percent — an error of 2.5 pp is a 16 %
+relative error on the quantity itself. This is what propagates into any
+stiffness or strength calculation downstream, and on a real scan there is no
+way to know it is wrong.
+
+**d′** — whether fibre and matrix can be told apart at all. After
+reconstruction each phase occupies a *range* of intensities, and `d′` is how far
+apart those ranges sit relative to their width:
+
+```
+matrix voxels reconstruct at  101.43 +/- 4.87
+fibre  voxels reconstruct at  122.48 +/- 5.79
+
+d' = gap / spread = 21.05 / 5.35 = 3.94
+```
+
+| `d′` | meaning |
+|---|---|
+| above 3 | cleanly separable, thresholding works |
+| 2 to 3 | marginal, expect misclassification |
+| below 2 | not separable — no threshold works, and any fibre fraction is an artefact |
+
+**Read `d′` first.** It says whether the measurement is possible; the fraction
+error says whether it is right. A good `d′` does not guarantee a good fraction:
+SIRT reaches `d′` 4.96 on clean data, better separation than FDK's 3.94, yet
+over-counts fibre by 2.54 pp because its smoothing shifts both phases.
 
 ---
 
@@ -220,39 +250,9 @@ sino   = W * volume      # forward projection   A x
 volume = W.T * sino      # back projection      A^T y
 ```
 
-`examples/custom_iterative.py` is a complete worked example built this way,
-with a single `reconstruct()` function to replace. Run it as-is to see the
-whole path end to end:
-
-```bash
-python examples/custom_iterative.py \
-    --dataset data/full_realistic_820 --which noisy \
-    --out my_iterative_result.nii
-```
-
-Watch convergence when you swap in your own method. That example needs about
-60 iterations before fibre and matrix become separable at all; at 10 it scores
-*d′* 0.72 and the fibres are invisible. **An under-converged reconstruction and
-a bad algorithm look identical in the fidelity metrics — `d′` is what tells
-them apart.**
-
-**For an iterative method**, `examples/custom_iterative.py` is a runnable
-template. You do not have to reimplement the geometry: ASTRA exposes it as a
-linear operator, and you supply only the iteration.
-
-```python
-W = astra.OpTomo(proj_id)
-sino   = W * volume      # forward projection, A x
-volume = W.T * sino      # back projection,    A^T y
-```
-
-Replace its `reconstruct()` function with your method and the rest — loading,
-geometry, saving, the scoring command — is unchanged.
-
-```bash
-python examples/custom_iterative.py \
-    --dataset data/full_realistic_820 --which noisy --out my_result.nii
-```
+Watch `d′` while your method converges. An under-converged reconstruction and
+a genuinely bad algorithm look identical in RMSE and SSIM; `d′` is what tells
+them apart.
 
 ### What the projection values are
 
@@ -393,14 +393,10 @@ fiber_phantom/
 generate_for_reconstruction.py   CLI: config in, fibre dataset out
 make_reference_phantom.py        CLI: config in, fibre-free phantom out
 configs/                    specimen and scan parameter sets
-examples/
-  custom_iterative.py         worked example: your own iterative algorithm
 analysis/
   reconstruct_from_projections.py  reconstruct from geometry.json alone
   score_reconstruction.py          score a reconstruction against truth
   measure_artefacts.py             cupping, noise, rings, axial drift
-examples/
-  custom_iterative.py              template: your own iterative algorithm
 data/                       datasets (git-ignored)
 ```
 
